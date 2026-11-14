@@ -17,7 +17,7 @@ import { createClient } from "@/lib/supabase/server";
 
 const execFileAsync = promisify(execFile);
 
-export const maxDuration = 600;
+export const maxDuration = 300;
 
 const MAX_FILE_SIZE = 20 * 1024 * 1024;
 const OCR_TIMEOUT = 600_000;
@@ -329,3 +329,4 @@ export async function POST(
     }
   }
 }
+
