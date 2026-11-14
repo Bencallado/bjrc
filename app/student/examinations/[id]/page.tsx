@@ -311,9 +311,25 @@ async function ExaminationContent({
                       value={examination.id}
                     />
 
+                    <label className="flex cursor-pointer items-start gap-3 rounded-lg border border-slate-300 bg-white p-4">
+                      <input
+                        type="checkbox"
+                        name="acknowledgeInstructions"
+                        required
+                        className="mt-1 h-4 w-4 shrink-0 accent-blue-950"
+                      />
+
+                      <span className="text-sm leading-6 text-slate-700">
+                        I confirm that I have read, understood, and agree to
+                        follow the examination instructions. I understand
+                        that my examination attempt will begin when I
+                        proceed.
+                      </span>
+                    </label>
+
                     <button
                       type="submit"
-                      className="inline-flex min-h-12 w-full items-center justify-center rounded-lg bg-blue-950 px-5 py-3 text-sm font-bold text-white transition hover:bg-blue-800 focus:outline-none focus:ring-2 focus:ring-blue-600 focus:ring-offset-2"
+                      className="mt-5 inline-flex min-h-12 w-full items-center justify-center rounded-lg bg-blue-950 px-5 py-3 text-sm font-bold text-white transition hover:bg-blue-800 focus:outline-none focus:ring-2 focus:ring-blue-600 focus:ring-offset-2"
                     >
                       Start Examination
                     </button>
