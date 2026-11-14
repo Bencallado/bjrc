@@ -66,6 +66,17 @@ type Examination = {
   subtopic: string | null;
 };
 
+type StudentClassSection = {
+  class_id: string;
+  class_name: string;
+  class_code: string;
+  section_id: string;
+  section_name: string;
+  enrolled_at: string;
+  starts_at: string;
+  expires_at: string;
+};
+
 function formatManilaDateTime(value: string | null) {
   if (!value) return "Not specified";
 
@@ -83,6 +94,23 @@ function formatManilaDateTime(value: string | null) {
     hour: "numeric",
     minute: "2-digit",
     hour12: true,
+  }).format(date);
+}
+
+function formatManilaDate(value: string | null) {
+  if (!value) return "Not specified";
+
+  const date = new Date(value);
+
+  if (Number.isNaN(date.getTime())) {
+    return "Date unavailable";
+  }
+
+  return new Intl.DateTimeFormat("en-PH", {
+    timeZone: "Asia/Manila",
+    year: "numeric",
+    month: "long",
+    day: "numeric",
   }).format(date);
 }
 
@@ -120,6 +148,63 @@ function DashboardStat({
 
       <p className="mt-2 text-xs opacity-75">{description}</p>
     </div>
+  );
+}
+
+function AssignedClassCard({
+  assignment,
+}: {
+  assignment: StudentClassSection;
+}) {
+  return (
+    <article className="rounded-xl border border-blue-200 bg-white p-5 shadow-sm">
+      <div className="flex flex-col justify-between gap-3 sm:flex-row sm:items-start">
+        <div className="min-w-0">
+          <p className="text-xs font-semibold uppercase tracking-wide text-blue-700">
+            Assigned Class
+          </p>
+
+          <h4 className="mt-2 break-words text-lg font-bold text-blue-950">
+            {assignment.class_name}
+          </h4>
+
+          <p className="mt-1 text-sm text-slate-500">
+            Class Code: {assignment.class_code}
+          </p>
+        </div>
+
+        <span className="w-fit shrink-0 rounded-full bg-green-100 px-3 py-1 text-xs font-semibold text-green-800">
+          Active
+        </span>
+      </div>
+
+      <div className="mt-5 rounded-lg bg-blue-50 p-4">
+        <p className="text-xs font-semibold uppercase tracking-wide text-blue-700">
+          Your Assigned Section
+        </p>
+
+        <p className="mt-2 break-words text-xl font-bold text-blue-950">
+          {assignment.section_name}
+        </p>
+      </div>
+
+      <div className="mt-5 grid gap-4 border-t border-slate-100 pt-4 sm:grid-cols-2">
+        <div>
+          <p className="text-xs text-slate-500">Enrollment Date</p>
+          <p className="mt-1 text-sm font-semibold text-slate-900">
+            {formatManilaDate(assignment.enrolled_at)}
+          </p>
+        </div>
+
+        <div>
+          <p className="text-xs text-slate-500">Class Validity</p>
+          <p className="mt-1 text-sm font-semibold text-slate-900">
+            {formatManilaDate(assignment.starts_at)} –{" "}
+            {formatManilaDate(assignment.expires_at)}
+          </p>
+        </div>
+      </div>
+    </article>
   );
 }
 
@@ -234,6 +319,25 @@ async function StudentContent() {
     );
   }
 
+  // Retrieve the student's currently active class and section assignments.
+  const {
+    data: classSectionData,
+    error: classSectionError,
+  } = await supabase.rpc("student_get_my_class_sections");
+
+  const classSections: StudentClassSection[] = Array.isArray(
+    classSectionData
+  )
+    ? (classSectionData as unknown as StudentClassSection[])
+    : [];
+
+  if (classSectionError) {
+    console.error(
+      "Unable to load assigned classes and sections:",
+      classSectionError.message
+    );
+  }
+
   // Retrieve examinations with their subject categories.
   const {
     data: examinationData,
@@ -256,7 +360,9 @@ async function StudentContent() {
     "student_list_exam_results_with_subjects"
   );
 
-  const results: ExamResult[] = Array.isArray(resultData)
+  const results: ExamResult[] = Array.isArray(
+    resultData
+  )
     ? (resultData as unknown as ExamResult[])
     : [];
 
@@ -354,6 +460,50 @@ async function StudentContent() {
               </span>
             </div>
           </div>
+        </section>
+
+        {/* Assigned Classes and Sections */}
+        <section className="mt-8">
+          <div className="mb-5">
+            <h3 className="text-xl font-bold text-blue-950">
+              My Assigned Class &amp; Section
+            </h3>
+
+            <p className="mt-1 text-sm text-slate-500">
+              Your currently active class and section assignments.
+            </p>
+          </div>
+
+          {classSectionError ? (
+            <div
+              role="alert"
+              className="rounded-xl border border-red-200 bg-red-50 p-5 text-sm text-red-800"
+            >
+              Unable to load your assigned class and section.
+              Please refresh the page or contact the administrator.
+            </div>
+          ) : classSections.length === 0 ? (
+            <div className="rounded-xl border border-dashed border-slate-300 bg-white p-8 text-center">
+              <h4 className="font-bold text-blue-950">
+                No Active Class or Section Assigned
+              </h4>
+
+              <p className="mt-2 text-sm leading-6 text-slate-500">
+                You currently have no active class and section
+                assignments. Please contact your administrator
+                for assistance.
+              </p>
+            </div>
+          ) : (
+            <div className="grid gap-4 md:grid-cols-2">
+              {classSections.map((assignment) => (
+                <AssignedClassCard
+                  key={`${assignment.class_id}-${assignment.section_id}`}
+                  assignment={assignment}
+                />
+              ))}
+            </div>
+          )}
         </section>
 
         {/* Overview */}
